@@ -18,6 +18,10 @@
     --vermelho: #D94937;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 body {
     background-color: var(--branco);
     font-family: var(--fonte-principal);

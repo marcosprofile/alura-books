@@ -1,6 +1,8 @@
 .principal {
-    width: 50vw;
+    width: 100vw;
+    max-width: 800px;
     margin: 5em auto 6em auto;
+    padding: 0 1.5rem;
 }
 
 .principal__titulo {
@@ -65,9 +67,7 @@
     width: 16px;
     height: 16px;
     margin: 0 .5em;
-    background-image: url('../img/warning.png');
-    background-repeat: no-repeat;
-    background-size: contain;
+    object-fit: contain;
 }
 
 .erro__texto {
