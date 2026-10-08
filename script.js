@@ -1,35 +1,63 @@
 const baseUrl = "https://viacep.com.br/ws/";
 
+const campoCEP = document.getElementById("cep");
+const mensagemErro = document.getElementById("erro");
+const carregamento = document.getElementById("carregamento");
+
+const cidade = document.getElementById("cidade");
+const logradouro = document.getElementById("endereco");
+const estado = document.getElementById("estado");
+const bairro = document.getElementById("bairro");
+
+function limparEndereco() {
+  cidade.value = "";
+  logradouro.value = "";
+  estado.value = "";
+  bairro.value = "";
+}
+
 async function buscarEndereco(cep) {
-  let mensagemErro = document.getElementById("erro");
   mensagemErro.innerHTML = "";
+  limparEndereco();
+
+  const cepNormalizado = cep.trim().replaceAll('-', "");
+
+  if (!/^\d{8}$/.test(cepNormalizado)) {
+    mensagemErro.innerHTML = `<p>Informe um CEP com oito números.</p>`;
+    return;
+  }
+
+  carregamento.textContent = "Buscando endereço...";
+  campoCEP.disabled = true;
 
   try {
-    let consultaCEP = await fetch(`${baseUrl}${cep}/json/`);
-    let consultaCEPConvertida = await consultaCEP.json();
-    if (consultaCEPConvertida.erro) {
-      throw new Error("CEP não existente!");
+    const resposta = await fetch(`${baseUrl}${cepNormalizado}/json/`);
+
+    if (!resposta.ok) {
+      throw new Error(`Falha na consulta: HTTP ${resposta.status}`);
     }
-    let cidade = document.getElementById("cidade");
-    let logradouro = document.getElementById("endereco");
-    let estado = document.getElementById("estado");
-    let bairro = document.getElementById("bairro");
-    
-    cidade.value = consultaCEPConvertida.localidade;
-    logradouro.value = consultaCEPConvertida.logradouro;
-    estado.value = consultaCEPConvertida.uf;
-    bairro.value = consultaCEPConvertida.bairro;
 
-    console.log(consultaCEPConvertida);
-    return consultaCEPConvertida;
+    const endereco = await resposta.json();
+
+    if (endereco.erro) {
+      mensagemErro.textContent = "CEP não encontrado.";
+      return;
+    }
+
+    cidade.value = endereco.localidade ?? "";
+    logradouro.value = endereco.logradouro ?? "";
+    estado.value = endereco.uf ?? "";
+    bairro.value = endereco.bairro ?? "";
+
+    return endereco;
   } catch (error) {
-    mensagemErro.innerHTML = `
-      <img class="erro__imagem" src="img/warning.png" alt="Ícone de erro" />
-      <p class="erro__texto">CEP inválido. Tente novamente!</p>
-    `;
-    console.log(error);
-  }
-};
+    mensagemErro.innerHTML = `<p>Não foi possível consultar o CEP. Tente novamente.</p>`;
 
-let cep = document.getElementById("cep");
-cep.addEventListener("focusout", () => buscarEndereco(cep.value));
+    console.error(error);
+  } finally {
+    carregamento.textContent = "";
+    campoCEP.disabled = false;
+  }
+}
+
+campoCEP.addEventListener("focusout", () => buscarEndereco(campoCEP.value));
